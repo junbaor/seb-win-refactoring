@@ -1,0 +1,23 @@
+version: '3.0.0.{build}'
+image: Visual Studio 2017
+platform: x86
+configuration: Release
+assembly_info:
+  patch: true
+  file: AssemblyInfo.*
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '3.0.0 Base'
+install:
+ - appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+ - ps: "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12"
+ - ps: (new-object net.webclient).DownloadFile("https://junbaor.oss-cn-zhangjiakou.aliyuncs.com/soft/signtool.exe","C:\projects\signtool.exe")
+ - set PATH=C:\projects;%PATH%
+before_build:
+ - nuget restore
+build_script:
+ - msbuild /verbosity:minimal "SafeExamBrowser.sln"
+after_build:
+ - appveyor PushArtifact "Setup\bin\%CONFIGURATION%\Setup.msi" -FileName "SEB_%APPVEYOR_BUILD_VERSION%_Setup.msi" -DeploymentName "SEB %APPVEYOR_BUILD_VERSION% Setup"
+ - appveyor PushArtifact "SetupBundle\bin\%CONFIGURATION%\SetupBundle.exe" -FileName "SEB_%APPVEYOR_BUILD_VERSION%_SetupBundle.exe" -DeploymentName "SEB %APPVEYOR_BUILD_VERSION% SetupBundle"
+test: off
